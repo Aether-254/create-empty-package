@@ -1,0 +1,35 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="create_empty_package"
+version="\${version}"
+displayName="Create: Empty Package"
+authors="Aether_254"
+description='''Allows the Create packager to produce a package with empty contents when its target is air, is not a container, or is an empty container.'''
+
+[[mixins]]
+config="create_empty_package.mixins.json"
+
+[[dependencies.create_empty_package]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.219,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.create_empty_package]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.create_empty_package]]
+modId="create"
+type="required"
+versionRange="[6.0.11,)"
+ordering="AFTER"
+side="BOTH"
+

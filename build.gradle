@@ -1,5 +1,5 @@
 plugins {
-    id "fabric-loom" version "1.10.5"
+    id "net.neoforged.moddev" version "2.0.141"
     id "maven-publish"
 }
 
@@ -10,40 +10,32 @@ base {
     archivesName = project.archives_base_name
 }
 
-repositories {
-    maven { url = "https://mvn.devos.one/releases" }
-    ivy {
-        name = "createFabricDirect"
-        url = "https://cdn.modrinth.com/data/Xbc0uyRg/versions/HAqwA6X1"
-        patternLayout { artifact "[artifact]-[revision].[ext]" }
-        metadataSources { artifact() }
-        content { includeGroup "create.fabric.direct" }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+
+    mods {
+        "${project.mod_id}" {
+            sourceSet sourceSets.main
+        }
     }
+}
+
+repositories {
+    maven { url = "https://maven.createmod.net" }
+    maven { url = "https://maven.ithundxr.dev/snapshots" }
+    maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven" }
     mavenCentral()
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "create.fabric.direct:create-fabric:${project.create_version}"
-    modCompileOnly "io.github.fabricators_of_create.Porting-Lib:transfer:2.3.13+1.20.1"
+    implementation "com.simibubi.create:create-1.21.1:${project.create_version}"
 }
 
 processResources {
     inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
+    filesMatching("META-INF/neoforge.mods.toml") {
         expand "version": project.version
     }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.release = 17
-}
-
-java {
-    withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
 }

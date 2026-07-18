@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "awa.Aether_254.create_empty_package.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [
     "PackagerBlockEntityMixin"
   ],
