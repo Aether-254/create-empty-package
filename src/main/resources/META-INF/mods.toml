@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="create_empty_package"
+version="\${version}"
+displayName="Create: Empty Package"
+authors="Aether_254"
+description='''Allows the Create packager to produce a package with empty contents when its target is air, is not a container, or is an empty container.'''
+
+[[dependencies.create_empty_package]]
+modId="forge"
+mandatory=true
+versionRange="[47.1.33,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.create_empty_package]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.create_empty_package]]
+modId="create"
+mandatory=true
+versionRange="[6.0.8,)"
+ordering="AFTER"
+side="BOTH"
+

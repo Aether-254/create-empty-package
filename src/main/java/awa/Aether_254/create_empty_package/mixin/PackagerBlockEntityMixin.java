@@ -5,12 +5,10 @@ import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagerItemHandler;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipulationBehaviour;
-import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import java.util.List;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,11 +31,10 @@ abstract class PackagerBlockEntityMixin {
     private void createEmptyPackage$packageEmptyTarget(List<PackagingRequest> requests, CallbackInfo ci) {
         if (requests != null)
             return;
-
         if (!heldBox.isEmpty() || animationTicks != 0 || buttonCooldown > 0)
             return;
 
-        Storage<ItemVariant> target = targetInventory.getInventory();
+        IItemHandler target = targetInventory.getInventory();
         if (target instanceof PackagerItemHandler || hasItems(target))
             return;
 
@@ -53,11 +50,13 @@ abstract class PackagerBlockEntityMixin {
         ci.cancel();
     }
 
-    private static boolean hasItems(Storage<ItemVariant> target) {
+    private static boolean hasItems(IItemHandler target) {
         if (target == null)
             return false;
-        for (StorageView<ItemVariant> ignored : target.nonEmptyViews())
-            return true;
+        for (int slot = 0; slot < target.getSlots(); slot++) {
+            if (!target.getStackInSlot(slot).isEmpty())
+                return true;
+        }
         return false;
     }
 }

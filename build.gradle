@@ -1,5 +1,6 @@
 plugins {
-    id "fabric-loom" version "1.10.5"
+    id "net.minecraftforge.gradle" version "[6.0.24,6.2)"
+    id "org.spongepowered.mixin" version "0.7-SNAPSHOT"
     id "maven-publish"
 }
 
@@ -10,40 +11,55 @@ base {
     archivesName = project.archives_base_name
 }
 
-repositories {
-    maven { url = "https://mvn.devos.one/releases" }
-    ivy {
-        name = "createFabricDirect"
-        url = "https://cdn.modrinth.com/data/Xbc0uyRg/versions/HAqwA6X1"
-        patternLayout { artifact "[artifact]-[revision].[ext]" }
-        metadataSources { artifact() }
-        content { includeGroup "create.fabric.direct" }
-    }
-    mavenCentral()
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "create.fabric.direct:create-fabric:${project.create_version}"
-    modCompileOnly "io.github.fabricators_of_create.Porting-Lib:transfer:2.3.13+1.20.1"
-}
-
-processResources {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 17
 }
 
-java {
-    withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+minecraft {
+    mappings channel: "official", version: project.minecraft_version
+    copyIdeResources = true
+}
+
+mixin {
+    add sourceSets.main, "${project.mod_id}.refmap.json"
+    config "${project.mod_id}.mixins.json"
+}
+
+repositories {
+    maven { url = "https://maven.createmod.net" }
+    maven { url = "https://maven.tterrag.com" }
+    maven { url = "https://maven.shedaniel.me/" }
+    maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven" }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+    implementation fg.deobf("com.simibubi.create:create-1.20.1:${project.create_version}:slim") {
+        transitive = false
+    }
+    implementation fg.deobf("net.createmod.ponder:Ponder-Forge-1.20.1:${project.ponder_version}")
+    compileOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-api-1.20.1:${project.flywheel_version}")
+    runtimeOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-1.20.1:${project.flywheel_version}")
+    implementation fg.deobf("com.tterrag.registrate:Registrate:${project.registrate_version}")
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
+    }
+}
+
+jar {
+    manifest {
+        attributes "MixinConfigs": "${project.mod_id}.mixins.json"
+    }
+    finalizedBy "reobfJar"
 }
