@@ -1,26 +1,86 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., v1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch:
+          - fabric/1.20.1
+          - quilt/1.20.1
+          - forge/1.20.1
+          - neoforge/1.20.1
+          - neoforge/1.21.1
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+      
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      
       - run: chmod +x gradlew
       - run: ./gradlew build --stacktrace
-      - uses: softprops/action-gh-release@v2
+      
+      - name: Sanitize branch name
+        id: sanitize
+        run: |
+          BRANCH="${{ matrix.branch }}"
+          SAFE_BRANCH="${BRANCH//\//-}"
+          echo "safe_branch=$SAFE_BRANCH" >> $GITHUB_OUTPUT
+      
+      - name: Rename jar with branch name
+        run: |
+          SAFE_BRANCH="${{ steps.sanitize.outputs.safe_branch }}"
+          mkdir -p output
+          for jar in build/libs/*.jar; do
+            # 跳过 sources 和 javadoc
+            if [[ "$jar" != *"sources"* ]] && [[ "$jar" != *"javadoc"* ]]; then
+              BASENAME=$(basename "$jar" .jar)
+              cp "$jar" "output/${BASENAME}-${SAFE_BRANCH}.jar"
+            fi
+          done
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
+          name: jars-${{ steps.sanitize.outputs.safe_branch }}
+          path: output/*.jar
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-jars
+      
+      - name: Move all jars to release directory
+        run: |
+          mkdir -p release-jars
+          find all-jars -name "*.jar" -exec cp {} release-jars/ \;
+          ls -la release-jars/
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.version }}
           generate_release_notes: true
-          files: build/libs/*.jar
+          files: release-jars/*.jar
